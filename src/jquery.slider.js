@@ -107,4 +107,129 @@
     });
   };
 
+  
+  // colorize elements
+      if (this.bubbleColor) {
+        this.bubbleArrow.css('background', this.bubbleColor);
+        this.bubble.css('background', this.bubbleColor);
+      }
+      if (this.bubbleFontColor) {
+        this.bubbleSpan.css('color', this.bubbleFontColor);
+      }
+      if (this.thumbColor) {
+        this.minus.css('color', this.thumbColor);
+        this.plus.css('color', this.thumbColor);
+        this.thumb.css('background', this.thumbColor);
+      }
+      if (this.thumbFontColor) {
+        this.thumbSpan.css('color', this.thumbFontColor);
+      }
+      if (this.trackColor) {
+        this.minus.css('border-color', this.trackColor);
+        this.plus.css('border-color', this.trackColor);
+        this.track.css('background', this.trackColor);
+      }
+
+      // other initial settings
+      this.dragging = false;
+      this.thumbOffset = this.thumb.outerWidth() / 2;
+
+      // set number value and thumb position
+      this.setValue(this.value);
+      this.positionThumb(this.value);
+
+      // set initial bubble state
+      if (this.toggleBubble && (this.value.toString().length <= this.toggleLimit)) {
+        this.bubble.hide();
+        this.thumbSpan.show();
+      } else {
+        this.thumbSpan.hide();
+      }
+
+      // disables default touch actions for IE on thumb
+      this.thumb.css('-ms-touch-action', 'none');
+
+      // thumb events (mouse and touch)
+      this.thumb.on('mousedown touchstart', (event) => {
+        if (!this.dragging) {
+          event.preventDefault();
+          this.dragging = true;
+          this.bubbleState(true);
+        }
+      });
+
+      $('html')
+        .on('mousemove touchmove', (event) => {
+          if (this.dragging) {
+            event.preventDefault();
+            if (event.type === 'touchmove') {
+              this.dragThumb(event.originalEvent.touches[0].pageX);
+            } else {
+              this.dragThumb(event.originalEvent.pageX);
+            }
+          }
+        }).on('mouseup touchend', (event) => {
+          if (this.dragging) {
+            event.preventDefault();
+            this.dragging = false;
+            this.bubbleState(false);
+          }
+      });
+
+      // minus button
+      this.minus.on('click', (event) => {
+        event.preventDefault();
+        let newValue = this.value - this.step;
+        newValue = Math.max(this.min, newValue);
+        this.setValue(newValue);
+        this.positionThumb(newValue);
+      });
+
+      // plus button
+      this.plus.on('click', (event) => {
+        event.preventDefault();
+        let newValue = this.value + this.step;
+        newValue = Math.min(this.max, newValue);
+        this.setValue(newValue);
+        this.positionThumb(newValue);
+      });
+
+      // adjust for window resize
+      $(window).on('resize onorientationchange', () => {
+        this.positionThumb(this.value);
+      });
+    }
+
+    // drag slider thumb
+    dragThumb(pageX) {
+      const minPosition = this.track.offset().left + this.thumbOffset;
+      const maxPosition = (this.track.offset().left + this.track.innerWidth()) - this.thumbOffset;
+
+      // find new position for thumb
+      let newPosition = Math.max(minPosition, pageX);
+      newPosition = Math.min(maxPosition, newPosition);
+
+      this.setValue(this.calcValue()); // set slider number
+
+      // set the new thumb position
+      this.thumb.offset({
+        left: newPosition - this.thumbOffset
+      });
+    }
+
+    // calculate value for slider
+    calcValue() {
+      const trackRatio = this.normalize(this.thumb.position().left, 0, this.track.innerWidth() - (this.thumbOffset * 2));
+      return (trackRatio * (this.max - this.min)) + this.min;
+    }
+
+    // set new value for slider
+    setValue(value) {
+      this.value = (Math.round((value - this.min) / this.step) * this.step) + this.min; // find step value
+      this.element.val(this.value); // update hidden input number
+      const modValue = this.prefix + this.addCommas(this.value.toFixed(this.decimals)) + this.postfix; // modified number value
+      this.thumbSpan.text(modValue); // update thumb number
+      return this.bubbleSpan.text(modValue); // update bubble number
+    }
+
 }(jQuery));
