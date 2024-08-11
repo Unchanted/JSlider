@@ -228,4 +228,80 @@
       return this.bubbleSpan.text(modValue); // update bubble number
     }
 
-}(jQuery));
+    // position the thumb
+    positionThumb(value) {
+      const thumbRatio = this.normalize(value, this.min, this.max);
+      // set the new thumb position
+      this.thumb.offset({
+        left: Math.round((thumbRatio * (this.track.innerWidth() - (this.thumbOffset * 2))) + this.track.offset().left)
+      });
+    }
+
+    // toggle bubble on or off
+    bubbleState(state) {
+      if (this.toggleBubble) {
+        if (state) {
+          this.bubble.stop(true, true).fadeIn(300);
+          this.thumbSpan.stop(true, true).fadeOut(200);
+        } else if (this.value.toString().length <= this.toggleLimit) {
+          this.bubble.stop(true, true).fadeOut(300);
+          this.thumbSpan.stop(true, true).fadeIn(200);
+        }
+      }
+    }
+
+    // normalize number scaled 0 - 1
+    normalize(number, min, max) {
+      return (number - min) / (max - min);
+    }
+
+    // add commas to number
+    addCommas(num) {
+      return num.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+    }
+
+    // remove commas from number
+    removeCommas(num) {
+      return num.toString().replace(/,/g, '');
+    }
+  }
+
+  // jQuery plugin
+  $.fn.slider = function(settings) {
+    // default settings for plugin
+    const defaults = {
+      min: 0,
+      max: 100,
+      step: 1,
+      value: 50,
+      decimals: 0,
+      prefix: '',
+      postfix: '',
+      toggleBubble: false,
+      toggleLimit: 3,
+      bubbleColor: '',
+      bubbleFontScale: 1,
+      bubbleFontColor: '',
+      thumbScale: 1,
+      thumbColor: '',
+      thumbFontScale: 1,
+      thumbFontColor: '',
+      trackScale: 1,
+      trackColor: ''
+    };
+
+    // merge defaults with user defaults and settings
+    const merged = $.extend({}, defaults, $.fn.slider.defaults, settings);
+
+    // instantiate class instance
+    return new Slider($(this), merged);
+  };
+
+  // execute code
+  $(function() {
+    // attach to elements with class name
+    $('.jquery-slider').each(function() {
+      $(this).slider();
+    });
+  });
+}(jQuery);
