@@ -1,53 +1,46 @@
+!function($) { // avoid conflicts
+  'use_strict';
 
-(function($) {
-  'use strict';
-
+  // plugin class
   class Slider {
     constructor(element, settings) {
+      // setup plugin settings
       this.element = element;
-      this.settings = settings;
-      this.initSettings();
-      this.hideInput();
-      this.createSliderElements();
-      this.scaleElements();
-      this.adjustMargins();
-    }
+      this.min = this.element.attr('min') || settings.min;
+      this.max = this.element.attr('max') || settings.max;
+      this.step = this.element.attr('step') || settings.step;
+      this.value = this.element.attr('value') || (settings.max - settings.min) / 2 + settings.min;
+      this.decimals = this.element.data('decimals') || settings.decimals;
+      this.prefix = this.element.data('prefix') || settings.prefix;
+      this.postfix = this.element.data('postfix') || settings.postfix;
+      this.toggleBubble = this.element.data('toggle-bubble') || settings.toggleBubble;
+      this.toggleLimit = this.element.data('toggle-limit') || settings.toggleLimit;
+      this.bubbleColor = this.element.data('bubble-color') || settings.bubbleColor;
+      this.bubbleFontScale = this.element.data('bubble-font-scale') || settings.bubbleFontScale;
+      this.bubbleFontColor = this.element.data('bubble-font-color') || settings.bubbleFontColor;
+      this.thumbScale = this.element.data('thumb-scale') || settings.thumbScale;
+      this.thumbColor = this.element.data('thumb-color') || settings.thumbColor;
+      this.thumbFontScale = this.element.data('thumb-font-scale') || settings.thumbFontScale;
+      this.thumbFontColor = this.element.data('thumb-font-color') || settings.thumbFontColor;
+      this.trackScale = this.element.data('track-scale') || settings.trackScale;
+      this.trackColor = this.element.data('track-color') || settings.trackColor;
 
-    initSettings() {
-      const { element, settings } = this;
-      this.min = parseFloat(this.getAttrOrDefault('min', settings.min));
-      this.max = parseFloat(this.getAttrOrDefault('max', settings.max));
-      this.step = parseFloat(this.getAttrOrDefault('step', settings.step));
-      this.value = parseFloat(this.getAttrOrDefault('value', (settings.max - settings.min) / 2 + settings.min));
-      this.decimals = parseFloat(this.getAttrOrDefault('data-decimals', settings.decimals));
-      this.prefix = this.getAttrOrDefault('data-prefix', settings.prefix);
-      this.postfix = this.getAttrOrDefault('data-postfix', settings.postfix);
-      this.toggleBubble = this.getAttrOrDefault('data-toggle-bubble', settings.toggleBubble);
-      this.toggleLimit = parseFloat(this.getAttrOrDefault('data-toggle-limit', settings.toggleLimit));
-      this.bubbleColor = this.getAttrOrDefault('data-bubble-color', settings.bubbleColor);
-      this.bubbleFontScale = parseFloat(this.getAttrOrDefault('data-bubble-font-scale', settings.bubbleFontScale));
-      this.bubbleFontColor = this.getAttrOrDefault('data-bubble-font-color', settings.bubbleFontColor);
-      this.thumbScale = parseFloat(this.getAttrOrDefault('data-thumb-scale', settings.thumbScale));
-      this.thumbColor = this.getAttrOrDefault('data-thumb-color', settings.thumbColor);
-      this.thumbFontScale = parseFloat(this.getAttrOrDefault('data-thumb-font-scale', settings.thumbFontScale));
-      this.thumbFontColor = this.getAttrOrDefault('data-thumb-font-color', settings.thumbFontColor);
-      this.trackScale = parseFloat(this.getAttrOrDefault('data-track-scale', settings.trackScale));
-      this.trackColor = this.getAttrOrDefault('data-track-color', settings.trackColor);
-    }
-
-    getAttrOrDefault(attr, defaultValue) {
-      return this.removeCommas(this.element.attr(attr)) || defaultValue;
-    }
-
-    removeCommas(value) {
-      return value ? value.replace(/,/g, '') : value;
-    }
-
-    hideInput() {
+      // hide input field
       this.element.hide();
-    }
 
-    createSliderElements() {
+      // convert strings to numbers
+      this.min = parseFloat(this.removeCommas(this.min));
+      this.max = parseFloat(this.removeCommas(this.max));
+      this.step = parseFloat(this.removeCommas(this.step));
+      this.value = parseFloat(this.removeCommas(this.value));
+      this.decimals = parseFloat(this.removeCommas(this.decimals));
+      this.toggleLimit = parseFloat(this.removeCommas(this.toggleLimit));
+      this.bubbleFontScale = parseFloat(this.removeCommas(this.bubbleFontScale));
+      this.thumbScale = parseFloat(this.removeCommas(this.thumbScale));
+      this.thumbFontScale = parseFloat(this.removeCommas(this.thumbFontScale));
+      this.trackScale = parseFloat(this.removeCommas(this.trackScale));
+
+      // create slider elements
       this.slider = $('<div>').addClass('jquery-slider__wrap').insertAfter(this.element);
       this.minus = $('<div><span>-</span></div>').addClass('jquery-slider__minus').appendTo(this.slider);
       this.plus = $('<div><span>+</span></div>').addClass('jquery-slider__plus').appendTo(this.slider);
@@ -56,59 +49,62 @@
       this.bubble = $('<div><span>').addClass('jquery-slider__bubble').appendTo(this.thumb);
       this.bubbleArrow = $('<div>').addClass('jquery-slider__bubble-arrow').prependTo(this.bubble);
 
+      // span elements
       this.thumbSpan = this.thumb.find('span').first();
       this.bubbleSpan = this.bubble.find('span').first();
-    }
 
-    scaleElements() {
-      this.scaleElement(this.bubble, this.bubbleFontScale, ['font-size', 'border-radius']);
-      this.scaleElement(this.bubbleArrow, this.bubbleFontScale, ['width', 'height']);
-      this.scaleElement(this.thumb, this.thumbScale, ['width', 'height']);
-      this.scaleElement(this.thumbSpan, this.thumbFontScale, ['font-size']);
-      this.scaleMinusPlus();
-    }
-
-    scaleElement(element, scale, properties) {
-      if (scale !== 1) {
-        properties.forEach(property => {
-          element.css(property, `${parseFloat(element.css(property)) * scale}px`);
+      // size and scale elements
+      if (this.bubbleFontScale !== 1) {
+        this.bubble.css({
+          'font-size': (parseFloat(this.bubble.css('font-size')) * this.bubbleFontScale) + 'px',
+          'border-radius': (parseFloat(this.bubble.css('border-radius')) * this.bubbleFontScale) + 'px'
+        });
+        this.bubbleArrow.css({
+          'width': (parseFloat(this.bubbleArrow.css('width')) * this.bubbleFontScale) + 'px',
+          'height': (parseFloat(this.bubbleArrow.css('height')) * this.bubbleFontScale) + 'px'
         });
       }
-    }
 
-    scaleMinusPlus() {
+      if (this.thumbScale !== 1) {
+        this.thumb.css({
+          'width': (parseFloat(this.thumb.css('width')) * this.thumbScale) + 'px',
+          'height': (parseFloat(this.thumb.css('height')) * this.thumbScale) + 'px'
+        });
+      }
+
+      if (this.thumbFontScale !== 1) {
+        this.thumbSpan.css({
+          'font-size': (parseFloat(this.thumbSpan.css('font-size')) * this.thumbFontScale) + 'px'
+        });
+      }
+
       if (this.trackScale !== 1) {
-        this.scaleElement(this.minus, this.trackScale, ['width', 'height', 'font-size']);
-        this.scaleElement(this.plus, this.trackScale, ['width', 'height', 'font-size']);
+        this.minus.css({
+          'width': Math.round(parseFloat(this.minus.css('width')) * this.trackScale) + 'px',
+          'height': Math.round(parseFloat(this.minus.css('height')) * this.trackScale) + 'px',
+          'font-size': Math.round(parseFloat(this.minus.css('font-size')) * this.trackScale) + 'px'
+        });
+        this.plus.css({
+          'width': Math.round(parseFloat(this.plus.css('width')) * this.trackScale) + 'px',
+          'height': Math.round(parseFloat(this.plus.css('height')) * this.trackScale) + 'px',
+          'font-size': Math.round(parseFloat(this.plus.css('font-size')) * this.trackScale) + 'px'
+        });
         this.track.css({
-          left: `${parseFloat(this.minus.outerWidth()) * 1.2}px`,
-          right: `${parseFloat(this.plus.outerWidth()) * 1.2}px`
+          'left': parseFloat(this.minus.outerWidth()) + (this.minus.outerWidth() * 0.2) + 'px',
+          'right': parseFloat(this.plus.outerWidth()) + (this.plus.outerWidth()* 0.2) + 'px'
         });
       }
-    }
 
-    adjustMargins() {
-      if (this.bubbleFontScale !== 1 || this.thumbScale !== 1 || this.trackScale !== 1) {
-        const trackHeight = Math.max(this.thumb.outerHeight(), this.plus.outerHeight());
+      // adjust margin spacing
+      if ((this.bubbleFontScale !== 1) || (this.thumbScale !== 1) || (this.trackScale !== 1)) {
+        const trackHeight = this.thumb.outerHeight() > this.plus.outerHeight() ? this.thumb.outerHeight() : this.plus.outerHeight();
         const bubbleHeight = this.bubble.outerHeight();
         this.slider.css({
-          margin: `${trackHeight + bubbleHeight}px auto`
+          'margin': parseFloat(trackHeight) + parseFloat(bubbleHeight) + 'px auto'
         });
       }
-    }
-  }
 
-  // jQuery plugin setup
-  $.fn.sliderPlugin = function(settings) {
-    return this.each(function() {
-      if (!$.data(this, 'sliderPlugin')) {
-        $.data(this, 'sliderPlugin', new Slider($(this), settings));
-      }
-    });
-  };
-
-  
-  // colorize elements
+      // colorize elements
       if (this.bubbleColor) {
         this.bubbleArrow.css('background', this.bubbleColor);
         this.bubble.css('background', this.bubbleColor);
