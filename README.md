@@ -7,6 +7,9 @@ A jquery slider to convert to get input field from range slider
 clone the repo and run the index.html file which is in dist folder :)
 
 
+# Screenshot
+
+![slider](./Pasted image.png)
 ---
 
 Arcade43
