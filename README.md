@@ -9,7 +9,9 @@ clone the repo and run the index.html file which is in dist folder :)
 
 # Screenshot
 
-![slider](./Pasted image.png)
+![Uploading Pasted image.png…]()
+
+
 ---
 
 Arcade43
